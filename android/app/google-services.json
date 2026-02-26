@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "449654256607",
+    "project_id": "connect-care-22",
+    "storage_bucket": "connect-care-22.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:449654256607:android:376b86a49873b9a4630a6a",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9oChnzpg3lTJTjwqgivLGKPyejcrYhfU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
