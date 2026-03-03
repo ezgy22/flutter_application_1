@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// Servis dosyanı import ediyoruz (Klasör yapına göre yolu kontrol et)
+// Veritabanı sorgularımızı yapan servis (Klasör yolunu kontrol et)
 import '../services/database_service.dart';
 
 class CaregiverHomePage extends StatelessWidget {
@@ -9,29 +9,30 @@ class CaregiverHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Veritabanı servisimizi tanımlıyoruz
+    // Veritabanı servisini tanımlıyoruz
     final DatabaseService _databaseService = DatabaseService();
 
     return Scaffold(
-      // Arka plan için senin seçtiğin ferah yeşil tonu
+      // Arka plan için ferah ve sakinleştirici yeşil tonu
       backgroundColor: const Color(0xFFF1F8F1),
       appBar: AppBar(
         title: const Text(
-          "Bakıcı Paneli",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          "BAKICI PANELİ",
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF388E3C), // Koyu Yeşil
-        elevation: 4,
+        elevation: 0, // Sade görünüm için gölgeyi kaldırdık
         actions: [
+          // Üst sağdaki Ayarlar İkonu: İleride hesap ve hasta yönetimi buraya gelecek
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async => await FirebaseAuth.instance.signOut(),
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () => _showSettingsMenu(context),
           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // Servis üzerinden canlı veri akışını başlatıyoruz
+        // Firestore'u canlı (real-time) dinliyoruz. Abin bir şeye bastığı an burası yenilenir.
         stream: _databaseService.getMyPatients(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -41,37 +42,26 @@ class CaregiverHomePage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.person_add_disabled,
-                    size: 80,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Henüz bir hasta eklemediniz.",
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                ],
+            return const Center(
+              child: Text(
+                "Henüz kayıtlı bir hasta bulunmuyor.",
+                style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
             );
           }
 
           // Hastaları listeleme kısmı
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               var patient = snapshot.data!.docs[index];
-              return _buildPatientCard(context, patient);
+              return _buildNotificationCard(context, patient);
             },
           );
         },
       ),
-      // Yeni Hasta Ekleme Butonu
+      // Yeni Hasta Ekleme: Hızlı erişim için sağ altta durmaya devam ediyor
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF388E3C),
         onPressed: () => _showAddPatientDialog(context, _databaseService),
@@ -80,52 +70,119 @@ class CaregiverHomePage extends StatelessWidget {
     );
   }
 
-  // HASTA KARTI TASARIMI (UI)
-  Widget _buildPatientCard(BuildContext context, var patient) {
+  // SADE HASTA KARTI VE CANLI BİLDİRİM TASARIMI
+  Widget _buildNotificationCard(BuildContext context, var patient) {
+    // Abinden gelen son piktogram mesajı (Su, Yemek vb.)
+    String? lastMessage = patient['last_message'];
+
     return Card(
-      elevation: 3,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 10,
-        ),
-        leading: const CircleAvatar(
-          backgroundColor: Color(0xFF8BC34A), // Parlak Yeşil
-          child: Icon(Icons.person, color: Colors.white),
-        ),
-        title: Text(
-          patient['patient_name'],
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        subtitle: Text(
-          "Durum: ${patient['status']}",
-          style: TextStyle(color: Colors.green[700]),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            patient['access_code'], // 6 haneli erişim kodu
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Color(0xFF2E7D32),
+      elevation: 4,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFF8BC34A), // Parlak Yeşil
+                child: Icon(Icons.person, color: Colors.white),
+              ),
+              title: Text(
+                patient['patient_name'], // "ahmet eren"
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+              subtitle: Text(
+                "Durum: ${patient['status']}",
+                style: TextStyle(color: Colors.green[700]),
+              ),
+              trailing: Text(
+                "#${patient['access_code']}", // Giriş kodu
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
             ),
-          ),
+
+            // CANLI BİLDİRİM ALANI: Abin bir butona bastığı an bu kırmızı kutu görünür
+            if (lastMessage != null && lastMessage.isNotEmpty)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color:
+                      Colors.red[50], // Dikkat çekici hafif kırmızı arka plan
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.red[200]!, width: 1.5),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.notification_important,
+                      color: Colors.red,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "YENİ TALEP: $lastMessage",
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );
   }
 
-  // YENİ HASTA EKLEME PENCERESİ (DIALOG)
+  // AYARLAR MENÜSÜ (Şimdilik sadece Çıkış var)
+  void _showSettingsMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text(
+                "Oturumu Kapat",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pop(context); // Menüyü kapat
+                // main.dart'taki StreamBuilder sayesinde otomatik olarak LoginPage'e dönecektir.
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // HASTA EKLEME DİALOGU (Kendi yazdığın yapıyı koruduk)
   void _showAddPatientDialog(BuildContext context, DatabaseService service) {
     final TextEditingController nameController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -135,17 +192,12 @@ class CaregiverHomePage extends StatelessWidget {
         ),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
-            hintText: "Hastanın Adı Soyadı",
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Color(0xFF388E3C)),
-            ),
-          ),
+          decoration: const InputDecoration(hintText: "Hastanın Adı Soyadı"),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("İptal", style: TextStyle(color: Colors.grey)),
+            child: const Text("İptal"),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -153,9 +205,7 @@ class CaregiverHomePage extends StatelessWidget {
             ),
             onPressed: () async {
               if (nameController.text.isNotEmpty) {
-                await service.addPatient(
-                  nameController.text,
-                ); // Servis üzerinden kayıt
+                await service.addPatient(nameController.text);
                 Navigator.pop(context);
               }
             },

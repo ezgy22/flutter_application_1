@@ -6,13 +6,13 @@ class DatabaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // 1. Rastgele 6 haneli kod üretme
+  // 1. RASTGELE KOD ÜRETİCİ: Abinin giriş yaparken kullanacağı 6 haneli kod.
   String _generateAccessCode() {
     var rng = Random();
     return (100000 + rng.nextInt(900000)).toString();
   }
 
-  // 2. Yeni Hasta Ekleme
+  // 2. YENİ HASTA EKLEME: Bakıcı panelindeki "+" butonuyla Ahmet Eren'i eklediğimiz kısım.
   Future<void> addPatient(String patientName) async {
     try {
       String code = _generateAccessCode();
@@ -22,22 +22,31 @@ class DatabaseService {
         'patient_name': patientName,
         'access_code': code,
         'caregiver_id': caregiverUid,
-        'created_at':
-            FieldValue.serverTimestamp(), // Firebase'in kendi saatini kullanmak daha garantidir
-        'status': 'Stabil',
+        'created_at': FieldValue.serverTimestamp(),
+        'status': 'Stabil', // Varsayılan durum
+        'last_message':
+            '', // ÖNEMLİ: Piktogram bildirimlerinin düşeceği alan burası!
       });
     } catch (e) {
       print("Hasta eklenirken hata oluştu: $e");
-      rethrow; // Hatayı yukarı fırlat ki UI tarafında kullanıcıya gösterebilelim
+      rethrow;
     }
   }
 
-  // 3. Bakıcının hastalarını anlık olarak getirme (Stream)
+  // 3. BAKICI PANELİ İÇİN CANLI VERİ (STREAM): Bildirimleri anlık görmeni sağlar.
   Stream<QuerySnapshot> getMyPatients() {
-    String caregiverUid = _auth.currentUser!.uid;
+    // GÜVENLİK KONTROLÜ: Kırmızı ekran hatasını bu '?' ve 'if' bloğu çözüyor.
+    User? currentUser = _auth.currentUser;
+
+    if (currentUser == null) {
+      // Kullanıcı giriş yapmamışsa boş bir akış döndürerek uygulamanın çökmesini engelleriz.
+      return const Stream.empty();
+    }
+
+    // Sadece giriş yapan bakıcıya ait hastaları getirir.
     return _db
         .collection('patients')
-        .where('caregiver_id', isEqualTo: caregiverUid)
+        .where('caregiver_id', isEqualTo: currentUser.uid)
         .snapshots();
   }
 }
