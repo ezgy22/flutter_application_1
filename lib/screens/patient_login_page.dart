@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'patient_home_page.dart';
 
 class PatientLoginPage extends StatefulWidget {
   const PatientLoginPage({super.key});
@@ -25,7 +26,7 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
     try {
       // SIHIRLI SATIR: Firebase'e gidip "Binlerce hasta arasından sadece bu koda sahip olanı getir" diyoruz.
       var sorgu = await FirebaseFirestore.instance
-          .collection('hastalar')
+          .collection('patients')
           .where('access_code', isEqualTo: girilenKod)
           .get();
 
@@ -35,7 +36,12 @@ class _PatientLoginPageState extends State<PatientLoginPage> {
 
         if (mounted) {
           _mesajGoster("Hoş geldin, $hastaAdi!", Colors.green);
-
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PatientHomePage(patientName: hastaAdi),
+            ),
+          );
           // NOT: Buraya ileride yapacağımız PatientHomePage yönlendirmesi gelecek.
           // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const PatientHomePage()));
         }
