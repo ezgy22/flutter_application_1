@@ -77,11 +77,8 @@ class ConsoleWidget extends StatelessWidget {
             Icons.home_filled,
             "ANA MENÜ",
             const Color(0xFF1B5E20),
-            onHome ??
-                () => Navigator.popUntil(
-                  context,
-                  (route) => route.isFirst,
-                ), // En başa (4 kategoriye) dön
+            // İŞTE SİHİRLİ DOKUNUŞ BURADA:
+            onHome ?? () => Navigator.pop(context),
           ),
         ],
       ),
