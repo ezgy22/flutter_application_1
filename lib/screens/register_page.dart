@@ -54,21 +54,21 @@ class _RegisterPageState extends State<RegisterPage> {
                 FieldValue.serverTimestamp(), // Zaman damgası veritabanı sunucusundan alınır.
           });
 
-      // 3. ADIM: Kayıt bitince kullanıcıyı bekletmeden 'Bakıcı Paneli'ne yönlendir.
+      // 3. ADIM: Kayıt bitince kullanıcıya mesaj ver ve GİRİŞ SAYFASINA yönlendir. (Profesyonel Akış)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Hesabınız başarıyla oluşturuldu! Hoş geldiniz.'),
+            content: Text('Kayıt Başarılı! Lütfen giriş yapınız.'),
             backgroundColor: Color(0xFF388E3C),
           ),
         );
 
-        // 'pushReplacement' kullanımı: Kayıt olan bakıcının geri tuşuyla bu sayfaya dönmesini engeller.
-        // Uygulama akışını 'Bakıcı Paneli'nden devam ettirir.
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const CaregiverHomePage()),
-        );
+        // ÖNEMLİ: Firebase kayıt olunca otomatik oturum açar. Güvenlik için onu kapatıp
+        // kullanıcının kendi şifresiyle tekrar girmesini sağlıyoruz.
+        await FirebaseAuth.instance.signOut();
+
+        // Navigator.pop: Bulunduğumuz Kayıt sayfasını kapatır ve altta zaten bekleyen Giriş sayfasına düşeriz.
+        Navigator.pop(context);
       }
     } on FirebaseAuthException catch (e) {
       // ÖZEL HATA YÖNETİMİ: Firebase'den gelen hataları (örn: e-posta kullanımda) yakalarız.
