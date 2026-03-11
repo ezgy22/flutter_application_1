@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 // Veritabanı sorgularımızı yapan servis (Klasör yolunu kontrol et)
 import '../../services/database_service.dart';
-import '../login_page.dart'; // ayarlar kısmı için ekledim.
+
+// YENİ MİMARİ: Küçük widget parçalarımızı çağırıyoruz
+import 'widgets/settings_bottom_sheet.dart';
+import 'widgets/add_patient_dialog.dart';
+import 'widgets/patient_card.dart';
 
 class CaregiverHomePage extends StatelessWidget {
   const CaregiverHomePage({super.key});
@@ -28,7 +32,9 @@ class CaregiverHomePage extends StatelessWidget {
           // Üst sağdaki Ayarlar İkonu: İleride hesap ve hasta yönetimi buraya gelecek
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => _showSettingsMenu(context),
+            onPressed: () => showSettingsMenu(
+              context,
+            ), // Parçaladığımız ayarlar menüsü çalışıyor
           ),
         ],
       ),
@@ -57,7 +63,8 @@ class CaregiverHomePage extends StatelessWidget {
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
               var patient = snapshot.data!.docs[index];
-              return _buildNotificationCard(context, patient);
+              // YENİ MİMARİ: Artık kod kalabalığı yok, sadece özel Kartımızı çağırıyoruz!
+              return PatientCard(patient: patient);
             },
           );
         },
@@ -65,373 +72,11 @@ class CaregiverHomePage extends StatelessWidget {
       // Yeni Hasta Ekleme: Hızlı erişim için sağ altta durmaya devam ediyor
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF388E3C),
-        onPressed: () => _showAddPatientDialog(context, _databaseService),
-        child: const Icon(Icons.add, size: 30, color: Colors.white),
-      ),
-    );
-  }
-
-  // SADE HASTA KARTI VE CANLI BİLDİRİM TASARIMI
-  Widget _buildNotificationCard(BuildContext context, var patient) {
-    // Abinden gelen son piktogram mesajı (Su, Yemek vb.)
-    String? lastMessage = patient['last_message'];
-
-    return Card(
-      elevation: 4,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-
-      // YENİ EKLENEN KISIM 1: Karta InkWell sarmalayıcısı ekledik.
-      // Bu sayede karta tıklandığında dalga efekti oluşacak ve detay ekranı açılacak.
-      child: InkWell(
-        borderRadius: BorderRadius.circular(
-          20,
-        ), // Dalga efektinin köşelerden taşmaması için
-        onTap: () => _showPatientDetails(
+        onPressed: () => showAddPatientDialog(
           context,
-          patient,
-        ), // Tıklayınca detay fonksiyonunu çağırır
-
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              ListTile(
-                leading: const CircleAvatar(
-                  backgroundColor: Color(0xFF8BC34A), // Parlak Yeşil
-                  child: Icon(Icons.person, color: Colors.white),
-                ),
-                title: Text(
-                  patient['patient_name'], // "ahmet eren"
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                subtitle: Text(
-                  "Durum: ${patient['status']}",
-                  style: TextStyle(color: Colors.green[700]),
-                ),
-                trailing: Text(
-                  "#${patient['access_code']}", // Giriş kodu
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-
-              // CANLI BİLDİRİM ALANI: Abin bir butona bastığı an bu kırmızı kutu görünür
-              if (lastMessage != null && lastMessage.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                    color:
-                        Colors.red[50], // Dikkat çekici hafif kırmızı arka plan
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.red[200]!, width: 1.5),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.notification_important,
-                        color: Colors.red,
-                        size: 28,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          "YENİ TALEP: $lastMessage",
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // YENİ EKLENEN KISIM 2: HASTA DETAY PENCERESİ FONKSİYONU
-  void _showPatientDetails(BuildContext context, var patient) {
-    // Veritabanında şu an yaş/hastalık kaydı yok. Program çökmesin diye "null" kontrolü yapıyoruz.
-    Map<String, dynamic> data = patient.data() as Map<String, dynamic>;
-    String age = data.containsKey('age')
-        ? data['age'].toString()
-        : "Belirtilmemiş";
-    String disease = data.containsKey('disease')
-        ? data['disease']
-        : "Belirtilmemiş";
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(25),
-          ),
-          title: Row(
-            children: [
-              const CircleAvatar(
-                radius: 25,
-                backgroundColor: Color(0xFF388E3C),
-                child: Icon(Icons.person, color: Colors.white, size: 30),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: Text(
-                  patient['patient_name'] ?? 'Bilinmeyen Hasta',
-                  style: const TextStyle(
-                    color: Color(0xFF2E7D32),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize
-                .min, // Sadece içindeki yazılar kadar yer kaplar, ekranı doldurmaz
-            children: [
-              const Divider(thickness: 1),
-              const SizedBox(height: 10),
-              _detailRow(Icons.cake, "Yaş", age),
-              const SizedBox(height: 15),
-              _detailRow(Icons.local_hospital, "Hastalık", disease),
-              const SizedBox(height: 15),
-              _detailRow(
-                Icons.monitor_heart,
-                "Durum",
-                patient['status'] ?? "Bilinmiyor",
-              ),
-              const SizedBox(height: 15),
-              _detailRow(
-                Icons.vpn_key,
-                "Giriş Kodu",
-                "#${patient['access_code']}",
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Kapat",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF388E3C),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Düzenleme sayfası yakında eklenecek!"),
-                  ),
-                );
-              },
-              child: const Text(
-                "Düzenle",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // YENİ EKLENEN KISIM 3: Detay penceresindeki satırların (İkon + Yazı) şık tasarımı
-  Widget _detailRow(IconData icon, String title, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: const Color(0xFF388E3C), size: 24),
-        const SizedBox(width: 12),
-        Text(
-          "$title: ",
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.black87,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 16, color: Colors.black54),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // AYARLAR MENÜSÜ (Genişletilmiş Kontrol Merkezi - Senin kodun)
-  void _showSettingsMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // MENÜ BAŞLIĞI VE ÇİZGİSİ
-            const Padding(
-              padding: EdgeInsets.only(bottom: 10),
-              child: Text(
-                "Ayarlar",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2E7D32), // Koyu yeşil
-                ),
-              ),
-            ),
-            const Divider(thickness: 1),
-
-            // 1. PROFİLİ DÜZENLE
-            ListTile(
-              leading: const Icon(Icons.person, color: Color(0xFF388E3C)),
-              title: const Text(
-                "Profili Düzenle",
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
-              onTap: () {
-                Navigator.pop(context); // Menüyü kapat
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Profil düzenleme sayfası eklenecek!"),
-                  ),
-                );
-              },
-            ),
-
-            // 2. HASTALARIMI YÖNET
-            ListTile(
-              leading: const Icon(Icons.people_alt, color: Color(0xFF388E3C)),
-              title: const Text(
-                "Hastalarımı Yönet",
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Hasta yönetimi eklenecek!")),
-                );
-              },
-            ),
-
-            // 3. ŞİFRE DEĞİŞTİR
-            ListTile(
-              leading: const Icon(Icons.lock_reset, color: Color(0xFF388E3C)),
-              title: const Text(
-                "Şifre Değiştir",
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey,
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Şifre değiştirme paneli eklenecek!"),
-                  ),
-                );
-              },
-            ),
-
-            const Divider(thickness: 1),
-
-            // 4. GÜVENLİ ÇIKIŞ YAP
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                "Oturumu Kapat",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () async {
-                // Sadece Firebase oturumunu kapatıyoruz.
-                // Yönlendirmeyi main.dart'taki StreamBuilder otomatik yapacak!
-                await FirebaseAuth.instance.signOut();
-
-                if (context.mounted) {
-                  Navigator.pop(context); // Sadece alttan açılan menüyü kapat
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // HASTA EKLEME DİALOGU (Kendi yazdığın yapıyı koruduk)
-  void _showAddPatientDialog(BuildContext context, DatabaseService service) {
-    final TextEditingController nameController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          "Yeni Hasta Ekle",
-          style: TextStyle(color: Color(0xFF2E7D32)),
-        ),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(hintText: "Hastanın Adı Soyadı"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("İptal"),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF388E3C),
-            ),
-            onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                await service.addPatient(nameController.text);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Kaydet", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+          _databaseService,
+        ), // Parçaladığımız ekleme penceresi
+        child: const Icon(Icons.add, size: 30, color: Colors.white),
       ),
     );
   }
