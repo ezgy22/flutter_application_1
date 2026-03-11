@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // Veritabanı sorgularımızı yapan servis (Klasör yolunu kontrol et)
 import '../services/database_service.dart';
+import 'login_page.dart'; // ayarlar kısmı için ekledim.
 
 class CaregiverHomePage extends StatelessWidget {
   const CaregiverHomePage({super.key});
@@ -148,6 +149,7 @@ class CaregiverHomePage extends StatelessWidget {
   }
 
   // AYARLAR MENÜSÜ (Şimdilik sadece Çıkış var)
+  // AYARLAR MENÜSÜ (Genişletilmiş Kontrol Merkezi)
   void _showSettingsMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -159,6 +161,88 @@ class CaregiverHomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // MENÜ BAŞLIĞI VE ÇİZGİSİ
+            const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: Text(
+                "Ayarlar",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2E7D32), // Koyu yeşil
+                ),
+              ),
+            ),
+            const Divider(thickness: 1),
+
+            // 1. PROFİLİ DÜZENLE
+            ListTile(
+              leading: const Icon(Icons.person, color: Color(0xFF388E3C)),
+              title: const Text(
+                "Profili Düzenle",
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+              onTap: () {
+                Navigator.pop(context); // Menüyü kapat
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Profil düzenleme sayfası eklenecek!"),
+                  ),
+                );
+              },
+            ),
+
+            // 2. HASTALARIMI YÖNET
+            ListTile(
+              leading: const Icon(Icons.people_alt, color: Color(0xFF388E3C)),
+              title: const Text(
+                "Hastalarımı Yönet",
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Hasta yönetimi eklenecek!")),
+                );
+              },
+            ),
+
+            // 3. ŞİFRE DEĞİŞTİR
+            ListTile(
+              leading: const Icon(Icons.lock_reset, color: Color(0xFF388E3C)),
+              title: const Text(
+                "Şifre Değiştir",
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Colors.grey,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Şifre değiştirme paneli eklenecek!"),
+                  ),
+                );
+              },
+            ),
+
+            const Divider(thickness: 1),
+
+            // 4. GÜVENLİ ÇIKIŞ YAP
+            // 4. GÜVENLİ ÇIKIŞ YAP
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text(
@@ -169,9 +253,13 @@ class CaregiverHomePage extends StatelessWidget {
                 ),
               ),
               onTap: () async {
+                // Sadece Firebase oturumunu kapatıyoruz.
+                // Yönlendirmeyi main.dart'taki StreamBuilder otomatik yapacak!
                 await FirebaseAuth.instance.signOut();
-                Navigator.pop(context); // Menüyü kapat
-                // main.dart'taki StreamBuilder sayesinde otomatik olarak LoginPage'e dönecektir.
+
+                if (context.mounted) {
+                  Navigator.pop(context); // Sadece alttan açılan menüyü kapat
+                }
               },
             ),
           ],
