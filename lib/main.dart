@@ -5,7 +5,7 @@ import 'firebase_options.dart';
 
 // EKRANLAR: Oluşturduğumuz sayfaları projeye dahil ediyoruz.
 import 'package:flutter_application_1/screens/login_page.dart';
-import 'package:flutter_application_1/screens/caregiver_home_page.dart';
+import 'package:flutter_application_1/screens/caregiver/caregiver_home_page.dart';
 
 void main() async {
   // FLUTTER BAŞLATICI: Flutter motorunun widgetları çizmeden önce hazır olmasını sağlar.

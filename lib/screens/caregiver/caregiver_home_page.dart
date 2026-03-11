@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // Veritabanı sorgularımızı yapan servis (Klasör yolunu kontrol et)
-import '../services/database_service.dart';
-import 'login_page.dart'; // ayarlar kısmı için ekledim.
+import '../../services/database_service.dart';
+import '../login_page.dart'; // ayarlar kısmı için ekledim.
 
 class CaregiverHomePage extends StatelessWidget {
   const CaregiverHomePage({super.key});
@@ -80,76 +80,209 @@ class CaregiverHomePage extends StatelessWidget {
       elevation: 4,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFF8BC34A), // Parlak Yeşil
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-              title: Text(
-                patient['patient_name'], // "ahmet eren"
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              subtitle: Text(
-                "Durum: ${patient['status']}",
-                style: TextStyle(color: Colors.green[700]),
-              ),
-              trailing: Text(
-                "#${patient['access_code']}", // Giriş kodu
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
 
-            // CANLI BİLDİRİM ALANI: Abin bir butona bastığı an bu kırmızı kutu görünür
-            if (lastMessage != null && lastMessage.isNotEmpty)
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color:
-                      Colors.red[50], // Dikkat çekici hafif kırmızı arka plan
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.red[200]!, width: 1.5),
+      // YENİ EKLENEN KISIM 1: Karta InkWell sarmalayıcısı ekledik.
+      // Bu sayede karta tıklandığında dalga efekti oluşacak ve detay ekranı açılacak.
+      child: InkWell(
+        borderRadius: BorderRadius.circular(
+          20,
+        ), // Dalga efektinin köşelerden taşmaması için
+        onTap: () => _showPatientDetails(
+          context,
+          patient,
+        ), // Tıklayınca detay fonksiyonunu çağırır
+
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            children: [
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF8BC34A), // Parlak Yeşil
+                  child: Icon(Icons.person, color: Colors.white),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.notification_important,
-                      color: Colors.red,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        "YENİ TALEP: $lastMessage",
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
+                title: Text(
+                  patient['patient_name'], // "ahmet eren"
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
+                ),
+                subtitle: Text(
+                  "Durum: ${patient['status']}",
+                  style: TextStyle(color: Colors.green[700]),
+                ),
+                trailing: Text(
+                  "#${patient['access_code']}", // Giriş kodu
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+
+              // CANLI BİLDİRİM ALANI: Abin bir butona bastığı an bu kırmızı kutu görünür
+              if (lastMessage != null && lastMessage.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color:
+                        Colors.red[50], // Dikkat çekici hafif kırmızı arka plan
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.red[200]!, width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.notification_important,
+                        color: Colors.red,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          "YENİ TALEP: $lastMessage",
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // AYARLAR MENÜSÜ (Şimdilik sadece Çıkış var)
-  // AYARLAR MENÜSÜ (Genişletilmiş Kontrol Merkezi)
+  // YENİ EKLENEN KISIM 2: HASTA DETAY PENCERESİ FONKSİYONU
+  void _showPatientDetails(BuildContext context, var patient) {
+    // Veritabanında şu an yaş/hastalık kaydı yok. Program çökmesin diye "null" kontrolü yapıyoruz.
+    Map<String, dynamic> data = patient.data() as Map<String, dynamic>;
+    String age = data.containsKey('age')
+        ? data['age'].toString()
+        : "Belirtilmemiş";
+    String disease = data.containsKey('disease')
+        ? data['disease']
+        : "Belirtilmemiş";
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+          title: Row(
+            children: [
+              const CircleAvatar(
+                radius: 25,
+                backgroundColor: Color(0xFF388E3C),
+                child: Icon(Icons.person, color: Colors.white, size: 30),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Text(
+                  patient['patient_name'] ?? 'Bilinmeyen Hasta',
+                  style: const TextStyle(
+                    color: Color(0xFF2E7D32),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize
+                .min, // Sadece içindeki yazılar kadar yer kaplar, ekranı doldurmaz
+            children: [
+              const Divider(thickness: 1),
+              const SizedBox(height: 10),
+              _detailRow(Icons.cake, "Yaş", age),
+              const SizedBox(height: 15),
+              _detailRow(Icons.local_hospital, "Hastalık", disease),
+              const SizedBox(height: 15),
+              _detailRow(
+                Icons.monitor_heart,
+                "Durum",
+                patient['status'] ?? "Bilinmiyor",
+              ),
+              const SizedBox(height: 15),
+              _detailRow(
+                Icons.vpn_key,
+                "Giriş Kodu",
+                "#${patient['access_code']}",
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Kapat",
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF388E3C),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Düzenleme sayfası yakında eklenecek!"),
+                  ),
+                );
+              },
+              child: const Text(
+                "Düzenle",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // YENİ EKLENEN KISIM 3: Detay penceresindeki satırların (İkon + Yazı) şık tasarımı
+  Widget _detailRow(IconData icon, String title, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: const Color(0xFF388E3C), size: 24),
+        const SizedBox(width: 12),
+        Text(
+          "$title: ",
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 16, color: Colors.black54),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // AYARLAR MENÜSÜ (Genişletilmiş Kontrol Merkezi - Senin kodun)
   void _showSettingsMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -241,7 +374,6 @@ class CaregiverHomePage extends StatelessWidget {
 
             const Divider(thickness: 1),
 
-            // 4. GÜVENLİ ÇIKIŞ YAP
             // 4. GÜVENLİ ÇIKIŞ YAP
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),

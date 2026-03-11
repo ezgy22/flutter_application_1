@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // Sadeleştirilmiş bakıcı paneli sayfamızı import ediyoruz
-import 'caregiver_home_page.dart';
+import 'caregiver/caregiver_home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
