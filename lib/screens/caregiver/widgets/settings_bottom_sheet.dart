@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Yeni oluşturduğumuz ayar sayfalarını import ediyoruz
+// İlgili ayar sayfalarını import ediyoruz
 import '../settings_pages/profile_edit_page.dart';
-import '../settings_pages/manage_patients_page.dart';
 import '../settings_pages/change_password_page.dart';
+// YENİ EKLENEN IMPORT: Hastaları yöneteceğimiz kaydırmalı liste sayfası
+import '../settings_pages/patient_list_page.dart';
 
-// AYARLAR MENÜSÜ (Genişletilmiş Kontrol Merkezi - Senin kodun)
+// AYARLAR MENÜSÜ (Genişletilmiş Kontrol Merkezi)
 void showSettingsMenu(BuildContext context) {
   showModalBottomSheet(
     context: context,
@@ -56,7 +57,7 @@ void showSettingsMenu(BuildContext context) {
             },
           ),
 
-          // 2. HASTALARIMI YÖNET
+          // 2. HASTALARIMI YÖNET (Yeni Listeleme Sayfasına Bağlandı)
           ListTile(
             leading: const Icon(Icons.people_alt, color: Color(0xFF388E3C)),
             title: const Text(
@@ -70,11 +71,12 @@ void showSettingsMenu(BuildContext context) {
             ),
             onTap: () {
               Navigator.pop(context); // Menüyü kapat
-              // Hasta yönetim sayfasına git
+
+              // YENİ DÜZENLEME: Artık yeni yazdığımız liste sayfasına gidiyoruz
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ManagePatientsPage(),
+                  builder: (context) => const PatientListPage(),
                 ),
               );
             },

@@ -1,15 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Timestamp için eklendi
+
+// YENİ EKLENEN KISIM 1: Düzenleme sayfamızı import ediyoruz
+import '../settings_pages/manage_patients_page.dart';
 
 // YENİ EKLENEN KISIM 2: HASTA DETAY PENCERESİ FONKSİYONU
 void showPatientDetails(BuildContext context, dynamic patient) {
-  // Veritabanında şu an yaş/hastalık kaydı yok. Program çökmesin diye "null" kontrolü yapıyoruz.
   Map<String, dynamic> data = patient.data() as Map<String, dynamic>;
-  String age = data.containsKey('age')
-      ? data['age'].toString()
-      : "Belirtilmemiş";
-  String disease = data.containsKey('disease')
-      ? data['disease']
-      : "Belirtilmemiş";
+
+  // YENİ MİMARİYE GÖRE DİNAMİK YAŞ HESAPLAMA
+  String ageText = "Belirtilmemiş";
+  if (data.containsKey('birth_date') && data['birth_date'] != null) {
+    DateTime dob = (data['birth_date'] as Timestamp).toDate();
+    DateTime today = DateTime.now();
+    int years = today.year - dob.year;
+    int months = today.month - dob.month;
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    ageText = years == 0 ? "$months Aylık" : "$years Yıl $months Ay";
+  } else if (data.containsKey('age')) {
+    ageText = data['age']
+        .toString(); // Eski düzende eklenmiş hastalar için yedek
+  }
+
+  // YENİ MİMARİYE GÖRE HASTALIK ETİKETLERİNİ BİRLEŞTİRME
+  String diseaseText = "Belirtilmemiş";
+  if (data.containsKey('diseases') && data['diseases'] != null) {
+    List<dynamic> dList = data['diseases'];
+    if (dList.isNotEmpty) {
+      diseaseText = dList.join(', '); // Örn: "Serebral Palsi, Epilepsi"
+    }
+  } else if (data.containsKey('disease')) {
+    diseaseText = data['disease']
+        .toString(); // Eski düzende eklenmiş hastalar için yedek
+  }
 
   showDialog(
     context: context,
@@ -37,14 +63,18 @@ void showPatientDetails(BuildContext context, dynamic patient) {
           ],
         ),
         content: Column(
-          mainAxisSize: MainAxisSize
-              .min, // Sadece içindeki yazılar kadar yer kaplar, ekranı doldurmaz
+          mainAxisSize:
+              MainAxisSize.min, // Sadece içindeki yazılar kadar yer kaplar
           children: [
             const Divider(thickness: 1),
             const SizedBox(height: 10),
-            _detailRow(Icons.cake, "Yaş", age),
+            _detailRow(Icons.cake, "Yaş", ageText), // Yeni dinamik yaş
             const SizedBox(height: 15),
-            _detailRow(Icons.local_hospital, "Hastalık", disease),
+            _detailRow(
+              Icons.local_hospital,
+              "Hastalık",
+              diseaseText,
+            ), // Yeni etiketli hastalıklar
             const SizedBox(height: 15),
             _detailRow(
               Icons.monitor_heart,
@@ -76,10 +106,14 @@ void showPatientDetails(BuildContext context, dynamic patient) {
               ),
             ),
             onPressed: () {
+              // YENİ DÜZENLEME: Önce popup'ı kapatıyoruz, sonra yönetim sayfasına yönlendiriyoruz
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Düzenleme sayfası yakında eklenecek!"),
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ManagePatientsPage(patientData: patient),
                 ),
               );
             },

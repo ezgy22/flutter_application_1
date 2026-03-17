@@ -23,7 +23,11 @@ class CaregiverHomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           "BAKICI PANELİ",
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.1),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         backgroundColor: const Color(0xFF388E3C), // Koyu Yeşil
