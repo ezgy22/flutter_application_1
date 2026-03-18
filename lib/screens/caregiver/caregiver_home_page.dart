@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// Veritabanı sorgularımızı yapan servis (Klasör yolunu kontrol et)
+// Veritabanı servisimiz
 import '../../services/database_service.dart';
 
-// Küçük widget parçalarımızı çağırıyoruz
+// Widget parçalarımız
 import 'widgets/settings_bottom_sheet.dart';
-import 'widgets/add_patient_dialog.dart';
 import 'widgets/patient_card.dart';
 
-// Profil Düzenleme sayfamızı çağırıyoruz
+// Sayfa yönlendirmelerimiz
 import 'settings_pages/profile_edit_page.dart';
+import 'settings_pages/manage_patients_page.dart'; // Hibrit sayfamız
 
 class CaregiverHomePage extends StatelessWidget {
   const CaregiverHomePage({super.key});
 
-  // GÜNCELLENEN KISIM: Veritabanından isim ve rol çeken, butonu küçültülmüş Pop-up
+  // SOL ÜST PROFIL POP-UP'I
   void _showProfilePopup(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -29,17 +29,14 @@ class CaregiverHomePage extends StatelessWidget {
           ),
           contentPadding: const EdgeInsets.all(25),
           content: FutureBuilder<DocumentSnapshot>(
-            // Firestore'dan o anki kullanıcının verilerini çekiyoruz
             future: FirebaseFirestore.instance
                 .collection('caregivers')
                 .doc(user?.uid)
                 .get(),
             builder: (context, snapshot) {
-              // Varsayılan metinler (Veri yüklenene kadar veya boşsa görünür)
               String name = "İsimsiz Bakıcı";
               String role = "Rol Belirtilmemiş";
 
-              // Veriler yüklenirken küçük bir yüklenme ikonu göster
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const SizedBox(
                   height: 150,
@@ -49,7 +46,6 @@ class CaregiverHomePage extends StatelessWidget {
                 );
               }
 
-              // Veritabanında kayıt varsa isim ve rolü güncelle
               if (snapshot.hasData && snapshot.data!.exists) {
                 var data = snapshot.data!.data() as Map<String, dynamic>;
                 name = data['name'] ?? name;
@@ -69,8 +65,6 @@ class CaregiverHomePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 15),
-
-                  // Veritabanından gelen AD SOYAD
                   Text(
                     name,
                     style: const TextStyle(
@@ -81,8 +75,6 @@ class CaregiverHomePage extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 5),
-
-                  // Veritabanından gelen ROL (Örn: Anne, Fizyoterapist)
                   Text(
                     role,
                     style: const TextStyle(
@@ -92,19 +84,14 @@ class CaregiverHomePage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-
-                  // Firebase'den gelen E-POSTA
                   Text(
                     user?.email ?? "Bilinmeyen Kullanıcı",
                     style: const TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                   const SizedBox(height: 25),
-
-                  // GÜNCELLENEN BUTON: Daha zarif ve ortalanmış tasarım
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pop(context); // Önce pop-up'ı kapat
-                      // Profil Düzenleme sayfasına git
+                      Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -124,11 +111,11 @@ class CaregiverHomePage extends StatelessWidget {
                       backgroundColor: const Color(0xFF388E3C),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
-                      ), // Daha yuvarlak (Hap) tasarım
+                      ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 12,
-                      ), // Genişliği esnetmek yerine padding verdik
+                      ),
                       elevation: 0,
                     ),
                   ),
@@ -143,13 +130,11 @@ class CaregiverHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Veritabanı servisini tanımlıyoruz
     final DatabaseService _databaseService = DatabaseService();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
       appBar: AppBar(
-        // Sol üst profil ikonu (leading)
         leading: IconButton(
           icon: const Icon(Icons.account_circle, size: 30, color: Colors.white),
           onPressed: () => _showProfilePopup(context),
@@ -166,7 +151,6 @@ class CaregiverHomePage extends StatelessWidget {
         backgroundColor: const Color(0xFF388E3C),
         elevation: 0,
         actions: [
-          // Ayarlar İkonu
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () => showSettingsMenu(context),
@@ -201,9 +185,18 @@ class CaregiverHomePage extends StatelessWidget {
           );
         },
       ),
+      // GÜNCELLENEN KISIM: ARTI BUTONU ARTIK DOĞRUDAN YENİ KAYIT SAYFASINA GİDİYOR
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF388E3C),
-        onPressed: () => showAddPatientDialog(context, _databaseService),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  const ManagePatientsPage(), // patientData göndermediğimiz için "Yeni Kayıt" modunda açılır.
+            ),
+          );
+        },
         child: const Icon(Icons.add, size: 30, color: Colors.white),
       ),
     );

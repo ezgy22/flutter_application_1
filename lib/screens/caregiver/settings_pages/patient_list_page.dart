@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Kullanıcı bazlı filtreleme için
 
-// Veritabanı servisini ve gerekli sayfaları import ediyoruz
-import '../../../services/database_service.dart';
-import '../widgets/add_patient_dialog.dart';
+// Yönlendirme yapacağımız hibrit sayfa
 import 'manage_patients_page.dart';
 
 class PatientListPage extends StatefulWidget {
@@ -33,27 +32,30 @@ class _PatientListPageState extends State<PatientListPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
 
-      // SAĞ ALTTAKİ ARTI (+) BUTONU - DÜZELTİLEN KISIM BURASI
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Senin yazdığın özel fonksiyonu çağırıyoruz!
-          showAddPatientDialog(context, DatabaseService());
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ManagePatientsPage()),
+          );
         },
         backgroundColor: const Color(0xFF388E3C),
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
 
-      // HASTALARIN LİSTELENDİĞİ ALAN
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('patients')
-            .orderBy('updated_at', descending: true)
-            .snapshots(),
+        // ÖNEMLİ: orderBy('updated_at') bazen Firestore indeksi oluşturulmadığı için boş dönebilir.
+        // Eğer hala boş gelirse '.orderBy(...)' kısmını geçici olarak silip dene.
+        stream: FirebaseFirestore.instance.collection('patients').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(color: Color(0xFF388E3C)),
             );
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text("Bir hata oluştu: ${snapshot.error}"));
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -75,11 +77,9 @@ class _PatientListPageState extends State<PatientListPage> {
               var data = patient.data() as Map<String, dynamic>;
               String patientName = data['patient_name'] ?? 'İsimsiz Hasta';
 
-              // SOLA KAYDIRARAK SİLME MANTIĞI (DISMISSIBLE)
               return Dismissible(
                 key: Key(patient.id),
-                direction: DismissDirection
-                    .endToStart, // Sadece sağdan sola kaydırmaya izin ver
+                direction: DismissDirection.endToStart,
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -91,10 +91,9 @@ class _PatientListPageState extends State<PatientListPage> {
                     Icons.delete_sweep,
                     color: Colors.white,
                     size: 32,
-                  ), // Kırmızılaşınca çıkan ikon
+                  ),
                 ),
                 confirmDismiss: (direction) async {
-                  // KAYDIRINCA ÇIKACAK OLAN "EMİN MİSİNİZ?" UYARISI
                   return await showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
@@ -103,24 +102,18 @@ class _PatientListPageState extends State<PatientListPage> {
                         style: TextStyle(color: Colors.red),
                       ),
                       content: Text(
-                        "$patientName isimli hastayı sistemden silmek istediğinize emin misiniz?",
+                        "$patientName isimli hastayı silmek istediğinize emin misiniz?",
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () =>
-                              Navigator.of(context).pop(false), // İptal
-                          child: const Text(
-                            "İptal",
-                            style: TextStyle(color: Colors.grey),
-                          ),
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text("İptal"),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
                           ),
-                          onPressed: () => Navigator.of(
-                            context,
-                          ).pop(true), // Silmeye onay ver
+                          onPressed: () => Navigator.pop(context, true),
                           child: const Text(
                             "SİL",
                             style: TextStyle(color: Colors.white),
@@ -131,19 +124,10 @@ class _PatientListPageState extends State<PatientListPage> {
                   );
                 },
                 onDismissed: (direction) async {
-                  // ONAY VERİLDİYSE VERİTABANINDAN SİL
                   await FirebaseFirestore.instance
                       .collection('patients')
                       .doc(patient.id)
                       .delete();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("$patientName silindi."),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
                 },
                 child: Card(
                   shape: RoundedRectangleBorder(
@@ -167,16 +151,10 @@ class _PatientListPageState extends State<PatientListPage> {
                         fontSize: 18,
                       ),
                     ),
-                    subtitle: Text(
-                      "Durum: ${data['status'] ?? 'Bilinmiyor'}",
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                    trailing: const Icon(
-                      Icons.swipe_left,
-                      color: Colors.grey,
-                    ), // Kullanıcıya "sola kaydır" ipucu verir
+                    subtitle: Text("Durum: ${data['status'] ?? 'Stabil'}"),
+                    trailing: const Icon(Icons.edit, color: Colors.grey),
                     onTap: () {
-                      // Karta tıklayınca senin o detaylı düzenleme sayfasına gider
+                      // Düzenleme modunda açması için veriyi gönderiyoruz
                       Navigator.push(
                         context,
                         MaterialPageRoute(

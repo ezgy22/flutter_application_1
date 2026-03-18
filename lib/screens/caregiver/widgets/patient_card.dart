@@ -10,25 +10,26 @@ class PatientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Abinden gelen son piktogram mesajı (Su, Yemek vb.)
-    String? lastMessage = patient['last_message'];
+    // Firestore verisini güvenli bir Map olarak alıyoruz
+    final Map<String, dynamic> data = patient.data() as Map<String, dynamic>;
+
+    // HATA ÇÖZÜMÜ: Alanların varlığını kontrol ederek değer atıyoruz
+    // Eğer 'last_message' yoksa null dönecek ve aşağıdaki bildirim alanı görünmeyecek.
+    String? lastMessage = data.containsKey('last_message')
+        ? data['last_message']
+        : null;
+    String status = data.containsKey('status') ? data['status'] : "Stabil";
+    String accessCode = data.containsKey('access_code')
+        ? data['access_code']
+        : "---";
 
     return Card(
       elevation: 4,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-
-      // YENİ EKLENEN KISIM 1: Karta InkWell sarmalayıcısı ekledik.
-      // Bu sayede karta tıklandığında dalga efekti oluşacak ve detay ekranı açılacak.
       child: InkWell(
-        borderRadius: BorderRadius.circular(
-          20,
-        ), // Dalga efektinin köşelerden taşmaması için
-        onTap: () => showPatientDetails(
-          context,
-          patient,
-        ), // Tıklayınca detay fonksiyonunu çağırır
-
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => showPatientDetails(context, patient),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -39,18 +40,18 @@ class PatientCard extends StatelessWidget {
                   child: Icon(Icons.person, color: Colors.white),
                 ),
                 title: Text(
-                  patient['patient_name'], // "ahmet eren"
+                  data['patient_name'] ?? 'İsimsiz Hasta',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
                   ),
                 ),
                 subtitle: Text(
-                  "Durum: ${patient['status']}",
+                  "Durum: $status",
                   style: TextStyle(color: Colors.green[700]),
                 ),
                 trailing: Text(
-                  "#${patient['access_code']}", // Giriş kodu
+                  "#$accessCode",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -58,15 +59,14 @@ class PatientCard extends StatelessWidget {
                 ),
               ),
 
-              // CANLI BİLDİRİM ALANI: Abin bir butona bastığı an bu kırmızı kutu görünür
+              // CANLI BİLDİRİM ALANI: Bir talep varsa görünür, yoksa yer kaplamaz
               if (lastMessage != null && lastMessage.isNotEmpty)
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.only(top: 8),
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
-                    color:
-                        Colors.red[50], // Dikkat çekici hafif kırmızı arka plan
+                    color: Colors.red[50],
                     borderRadius: BorderRadius.circular(15),
                     border: Border.all(color: Colors.red[200]!, width: 1.5),
                   ),

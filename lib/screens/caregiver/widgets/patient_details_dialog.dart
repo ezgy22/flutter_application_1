@@ -1,41 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Timestamp için eklendi
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// YENİ EKLENEN KISIM 1: Düzenleme sayfamızı import ediyoruz
+// Düzenleme sayfamızı import ediyoruz
 import '../settings_pages/manage_patients_page.dart';
 
-// YENİ EKLENEN KISIM 2: HASTA DETAY PENCERESİ FONKSİYONU
+// HASTA DETAY PENCERESİ FONKSİYONU
 void showPatientDetails(BuildContext context, dynamic patient) {
+  // Veriyi güvenli bir harita (Map) olarak alıyoruz
   Map<String, dynamic> data = patient.data() as Map<String, dynamic>;
 
-  // YENİ MİMARİYE GÖRE DİNAMİK YAŞ HESAPLAMA
+  // 1. YAŞ HESAPLAMA (GÜVENLİ)
   String ageText = "Belirtilmemiş";
   if (data.containsKey('birth_date') && data['birth_date'] != null) {
-    DateTime dob = (data['birth_date'] as Timestamp).toDate();
-    DateTime today = DateTime.now();
-    int years = today.year - dob.year;
-    int months = today.month - dob.month;
-    if (months < 0) {
-      years--;
-      months += 12;
+    try {
+      DateTime dob = (data['birth_date'] as Timestamp).toDate();
+      DateTime today = DateTime.now();
+      int years = today.year - dob.year;
+      int months = today.month - dob.month;
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      ageText = years == 0 ? "$months Aylık" : "$years Yıl $months Ay";
+    } catch (e) {
+      ageText = "Tarih Hatası";
     }
-    ageText = years == 0 ? "$months Aylık" : "$years Yıl $months Ay";
   } else if (data.containsKey('age')) {
-    ageText = data['age']
-        .toString(); // Eski düzende eklenmiş hastalar için yedek
+    ageText = data['age'].toString();
   }
 
-  // YENİ MİMARİYE GÖRE HASTALIK ETİKETLERİNİ BİRLEŞTİRME
+  // 2. HASTALIK ETİKETLERİ (GÜVENLİ)
   String diseaseText = "Belirtilmemiş";
   if (data.containsKey('diseases') && data['diseases'] != null) {
     List<dynamic> dList = data['diseases'];
     if (dList.isNotEmpty) {
-      diseaseText = dList.join(', '); // Örn: "Serebral Palsi, Epilepsi"
+      diseaseText = dList.join(', ');
     }
   } else if (data.containsKey('disease')) {
-    diseaseText = data['disease']
-        .toString(); // Eski düzende eklenmiş hastalar için yedek
+    diseaseText = data['disease'].toString();
   }
+
+  // 3. DURUM VE KOD (GÜVENLİ)
+  // containskKey kontrolü ile hata (Exception) almanı engelliyoruz
+  String statusText = data.containsKey('status')
+      ? data['status']
+      : "Bilinmiyor";
+  String accessCodeText = data.containsKey('access_code')
+      ? "#${data['access_code']}"
+      : "Tanımlanmadı";
 
   showDialog(
     context: context,
@@ -52,7 +64,7 @@ void showPatientDetails(BuildContext context, dynamic patient) {
             const SizedBox(width: 15),
             Expanded(
               child: Text(
-                patient['patient_name'] ?? 'Bilinmeyen Hasta',
+                data['patient_name'] ?? 'Bilinmeyen Hasta',
                 style: const TextStyle(
                   color: Color(0xFF2E7D32),
                   fontWeight: FontWeight.bold,
@@ -63,30 +75,17 @@ void showPatientDetails(BuildContext context, dynamic patient) {
           ],
         ),
         content: Column(
-          mainAxisSize:
-              MainAxisSize.min, // Sadece içindeki yazılar kadar yer kaplar
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Divider(thickness: 1),
             const SizedBox(height: 10),
-            _detailRow(Icons.cake, "Yaş", ageText), // Yeni dinamik yaş
+            _detailRow(Icons.cake, "Yaş", ageText),
             const SizedBox(height: 15),
-            _detailRow(
-              Icons.local_hospital,
-              "Hastalık",
-              diseaseText,
-            ), // Yeni etiketli hastalıklar
+            _detailRow(Icons.local_hospital, "Hastalık", diseaseText),
             const SizedBox(height: 15),
-            _detailRow(
-              Icons.monitor_heart,
-              "Durum",
-              patient['status'] ?? "Bilinmiyor",
-            ),
+            _detailRow(Icons.monitor_heart, "Durum", statusText),
             const SizedBox(height: 15),
-            _detailRow(
-              Icons.vpn_key,
-              "Giriş Kodu",
-              "#${patient['access_code']}",
-            ),
+            _detailRow(Icons.vpn_key, "Giriş Kodu", accessCodeText),
             const SizedBox(height: 10),
           ],
         ),
@@ -106,9 +105,7 @@ void showPatientDetails(BuildContext context, dynamic patient) {
               ),
             ),
             onPressed: () {
-              // YENİ DÜZENLEME: Önce popup'ı kapatıyoruz, sonra yönetim sayfasına yönlendiriyoruz
               Navigator.pop(context);
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -125,7 +122,6 @@ void showPatientDetails(BuildContext context, dynamic patient) {
   );
 }
 
-// YENİ EKLENEN KISIM 3: Detay penceresindeki satırların (İkon + Yazı) şık tasarımı
 Widget _detailRow(IconData icon, String title, String value) {
   return Row(
     crossAxisAlignment: CrossAxisAlignment.start,
