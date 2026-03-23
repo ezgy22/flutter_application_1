@@ -287,7 +287,7 @@ class _ManagePatientsPageState extends State<ManagePatientsPage> {
               ),
               const SizedBox(height: 15),
               DropdownButtonFormField<String>(
-                value: _selectedGender,
+                initialValue: _selectedGender,
                 decoration: InputDecoration(
                   labelText: "Cinsiyet",
                   prefixIcon: const Icon(Icons.wc, color: Color(0xFF388E3C)),

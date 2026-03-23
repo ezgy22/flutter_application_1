@@ -73,10 +73,12 @@ class _RegisterPageState extends State<RegisterPage> {
     } on FirebaseAuthException catch (e) {
       // ÖZEL HATA YÖNETİMİ: Firebase'den gelen hataları (örn: e-posta kullanımda) yakalarız.
       String mesaj = "Bir hata oluştu.";
-      if (e.code == 'email-already-in-use')
+      if (e.code == 'email-already-in-use') {
         mesaj = "Bu e-posta adresi zaten kullanımda.";
-      if (e.code == 'weak-password')
+      }
+      if (e.code == 'weak-password') {
         mesaj = "Şifreniz çok zayıf (En az 6 karakter).";
+      }
 
       _hataGoster(mesaj);
     } catch (e) {

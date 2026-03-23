@@ -246,7 +246,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
                     // Yakınlık / Rol Açılır Menüsü
                     DropdownButtonFormField<String>(
-                      value: _selectedRole,
+                      initialValue: _selectedRole,
                       decoration: InputDecoration(
                         labelText: "Sistemdeki Rolünüz",
                         prefixIcon: const Icon(

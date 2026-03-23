@@ -181,8 +181,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       toggleObscure: () =>
                           setState(() => _obscureCurrent = !_obscureCurrent),
                       validator: (val) {
-                        if (val == null || val.isEmpty)
+                        if (val == null || val.isEmpty) {
                           return "Lütfen mevcut şifrenizi girin.";
+                        }
                         return null;
                       },
                     ),
@@ -198,10 +199,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       toggleObscure: () =>
                           setState(() => _obscureNew = !_obscureNew),
                       validator: (val) {
-                        if (val == null || val.isEmpty)
+                        if (val == null || val.isEmpty) {
                           return "Lütfen yeni bir şifre girin.";
-                        if (val.length < 6)
+                        }
+                        if (val.length < 6) {
                           return "Şifre en az 6 karakter olmalıdır.";
+                        }
                         return null;
                       },
                     ),
@@ -215,10 +218,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       toggleObscure: () =>
                           setState(() => _obscureConfirm = !_obscureConfirm),
                       validator: (val) {
-                        if (val == null || val.isEmpty)
+                        if (val == null || val.isEmpty) {
                           return "Lütfen yeni şifrenizi tekrar girin.";
-                        if (val != _newPasswordController.text)
+                        }
+                        if (val != _newPasswordController.text) {
                           return "Şifreler birbiriyle eşleşmiyor.";
+                        }
                         return null;
                       },
                     ),

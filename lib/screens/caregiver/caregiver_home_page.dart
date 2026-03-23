@@ -130,7 +130,7 @@ class CaregiverHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DatabaseService _databaseService = DatabaseService();
+    final DatabaseService databaseService = DatabaseService();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8F1),
@@ -158,7 +158,7 @@ class CaregiverHomePage extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _databaseService.getMyPatients(),
+        stream: databaseService.getMyPatients(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(

@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 import 'patient_login_page.dart';
-import 'caregiver/caregiver_home_page.dart';
 //import 'package:proje_adın/screens/caregiver/caregiver_home_page.dart';
 
 class LoginPage extends StatefulWidget {
