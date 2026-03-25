@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// Giriş sayfasına dönebilmek için login_page.dart'ı çağırıyoruz
+
 import '../login_page.dart';
-// Aşağıdakiler bizim oluşturduğumuz diğer odalar (sayfalar).
 import 'categories/needs_page.dart';
 import 'categories/questions_page.dart';
 import 'categories/emotions_page.dart';
@@ -29,33 +28,30 @@ class PatientHomePage extends StatelessWidget {
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
-          // GÜVENLİ ÇIKIŞ BUTONU (Ayarlar İkonu)
           IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white, size: 30),
+            icon: const Icon(Icons.logout, color: Colors.white, size: 30),
             onPressed: () => _showLogoutConfirmation(context),
           ),
           const SizedBox(width: 10),
         ],
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Expanded(
+            const Expanded(
               flex: 1,
               child: Center(
                 child: Text(
-                  "Ne Yapmak İstersin?",
+                  "Ne Yapmak İstersin?", // DÜZELTİLDİ
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF1B5E20),
+                    color: Color(0xFF1B5E20),
                   ),
                 ),
               ),
             ),
-
             Expanded(
               flex: 5,
               child: GridView.count(
@@ -65,7 +61,7 @@ class PatientHomePage extends StatelessWidget {
                 children: [
                   _buildCategoryButton(
                     context,
-                    "İHTİYAÇLAR",
+                    "İHTİYAÇLAR", // DÜZELTİLDİ
                     Icons.wc,
                     const Color(0xFF388E3C),
                     () => Navigator.push(
@@ -75,7 +71,6 @@ class PatientHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   _buildCategoryButton(
                     context,
                     "SORULAR",
@@ -88,7 +83,6 @@ class PatientHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   _buildCategoryButton(
                     context,
                     "DUYGULAR",
@@ -101,10 +95,9 @@ class PatientHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   _buildCategoryButton(
                     context,
-                    "HABERLEŞME",
+                    "HABERLEŞME", // DÜZELTİLDİ
                     Icons.record_voice_over,
                     const Color(0xFF81C784),
                     () => Navigator.push(
@@ -161,7 +154,6 @@ class PatientHomePage extends StatelessWidget {
     );
   }
 
-  // --- HASTA İÇİN ÖZEL GÜVENLİ ÇIKIŞ ONAY EKRANI ---
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -182,9 +174,8 @@ class PatientHomePage extends StatelessWidget {
                   color: Colors.orange,
                 ),
                 const SizedBox(height: 20),
-
                 const Text(
-                  "ÇIKIŞ YAPMAK\nİSTEDİĞİNE EMİN MİSİN?",
+                  "ÇIKIŞ YAPMAK\nİSTEDİĞİNE EMİN MİSİN?", // DÜZELTİLDİ
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 22,
@@ -194,11 +185,9 @@ class PatientHomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 35),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // 1. KIRMIZI ÇARPI (Hayır, sayfada kal)
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Container(
@@ -222,14 +211,10 @@ class PatientHomePage extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                    // 2. YEŞİL TİK (Evet, çıkış yap ve Login'e dön)
                     GestureDetector(
                       onTap: () async {
-                        // Firebase'den çıkış yap
                         await FirebaseAuth.instance.signOut();
 
-                        // Eğer sayfa hala ekrandaysa Login sayfasına kökten dönüş yap
                         if (context.mounted) {
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(

@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../widgets/console_widget.dart';
+import '../widgets/preview_box.dart';
 
 class EmotionsPage extends StatelessWidget {
   const EmotionsPage({super.key});
@@ -8,15 +9,26 @@ class EmotionsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Duygular"),
+        title: const Text(
+          "Duygular",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        ),
         backgroundColor: const Color(0xFF66BB6A),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: const Center(
-        child: Text("Duygular tasarımı daha sonra buraya eklenecek."),
+      body: const Column(
+        children: [
+          Padding(padding: EdgeInsets.all(16), child: PreviewBox()),
+          Expanded(
+            child: Center(
+              child: Text("Duygular tasarımı daha sonra buraya eklenecek."),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: ConsoleWidget(
         onConfirm: () {
-          // Şimdilik boş, tıklayınca bir şey yapmayacak
+          // �imdilik bo�, t�klay�nca bir �ey yapmayacak
         },
       ),
     );

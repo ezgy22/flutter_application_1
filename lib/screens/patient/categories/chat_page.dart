@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../widgets/console_widget.dart';
+import '../widgets/preview_box.dart';
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -8,15 +9,26 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Haberleşme"),
+        title: const Text(
+          "Haberle�me",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        ),
         backgroundColor: const Color(0xFF81C784),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: const Center(
-        child: Text("Haberleşme tasarımı daha sonra buraya eklenecek."),
+      body: const Column(
+        children: [
+          Padding(padding: EdgeInsets.all(16), child: PreviewBox()),
+          Expanded(
+            child: Center(
+              child: Text("Haberle�me tasar�m� daha sonra buraya eklenecek."),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: ConsoleWidget(
         onConfirm: () {
-          // Şimdilik boş, tıklayınca bir şey yapmayacak
+          // Şimdilik boş, tıklayınca bir şey yapmayacak.
         },
       ),
     );
