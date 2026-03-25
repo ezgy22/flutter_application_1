@@ -10,7 +10,7 @@ class QuestionsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Sorular",
+          "SORULAR",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
         ),
         backgroundColor: const Color(0xFF43A047),

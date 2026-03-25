@@ -10,7 +10,7 @@ class NeedsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "İhtiyaçlar",
+          "İHTİYAÇLAR",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
         ),
         backgroundColor: const Color(0xFF388E3C),

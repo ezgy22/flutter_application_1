@@ -10,7 +10,7 @@ class ChatPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Haberle�me",
+          "HABERLEŞME",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
         ),
         backgroundColor: const Color(0xFF81C784),
@@ -21,7 +21,7 @@ class ChatPage extends StatelessWidget {
           Padding(padding: EdgeInsets.all(16), child: PreviewBox()),
           Expanded(
             child: Center(
-              child: Text("Haberle�me tasar�m� daha sonra buraya eklenecek."),
+              child: Text("Haberleşme tasarımı daha sonra buraya eklenecek."),
             ),
           ),
         ],

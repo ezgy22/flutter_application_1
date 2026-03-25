@@ -10,7 +10,7 @@ class EmotionsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Duygular",
+          "DUYGULAR",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
         ),
         backgroundColor: const Color(0xFF66BB6A),
