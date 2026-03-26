@@ -1,8 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Çıkış sonrası kullanıcıyı giriş ekranına güvenli şekilde yönlendirmek için gerekli sayfa.
 import '../login_page.dart';
+// Ana ekrandaki kategori kartlarının açacağı alt sayfalar.
 import 'categories/needs_page.dart';
+import 'categories/food_page.dart';
+import 'categories/health_page.dart';
 import 'categories/questions_page.dart';
 import 'categories/emotions_page.dart';
 import 'categories/chat_page.dart';
@@ -15,6 +19,7 @@ class PatientHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Açık yeşil arka plan, hastaya sakin ve tutarlı bir ana ekran hissi verir.
       backgroundColor: const Color(0xFFE8F5E9),
       appBar: AppBar(
         title: Text(
@@ -26,10 +31,12 @@ class PatientHomePage extends StatelessWidget {
         ),
         backgroundColor: const Color(0xFF2E7D32),
         centerTitle: true,
+        // Geri oku kapatılarak kullanıcının yanlışlıkla bu ekrandan geri çıkması önlenir.
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white, size: 30),
+            // Çıkışı doğrudan yapmak yerine önce onay diyaloğu gösterilir.
             onPressed: () => _showLogoutConfirmation(context),
           ),
           const SizedBox(width: 10),
@@ -39,6 +46,7 @@ class PatientHomePage extends StatelessWidget {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
+            // Üst başlık alanı, ekranın amacını ilk bakışta anlaşılır hale getirir.
             const Expanded(
               flex: 1,
               child: Center(
@@ -54,11 +62,13 @@ class PatientHomePage extends StatelessWidget {
             ),
             Expanded(
               flex: 5,
+              // Kategoriler iki sütunda gösterilerek erişim hızlandırılır ve görsel denge korunur.
               child: GridView.count(
                 crossAxisCount: 2,
                 mainAxisSpacing: 20,
                 crossAxisSpacing: 20,
                 children: [
+                  // Her kategori kartı ilgili sayfaya yönlendirilen bir giriş noktasıdır.
                   _buildCategoryButton(
                     context,
                     "İHTİYAÇLAR", // DÜZELTİLDİ
@@ -73,7 +83,32 @@ class PatientHomePage extends StatelessWidget {
                   ),
                   _buildCategoryButton(
                     context,
+                    "BESLENME",
+                    // Beslenme kategorisini daha anlasilir gostermek icin yemek ikonu kullanildi.
+                    Icons.restaurant_menu,
+                    const Color(0xFF4CAF50),
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const FoodPage()),
+                    ),
+                  ),
+                  _buildCategoryButton(
+                    context,
+                    "SA\u011eLIK",
+                    // Saglik/semptom kategorisini daha net anlatmak icin medikal ikon secildi.
+                    Icons.health_and_safety,
+                    const Color(0xFF43A047),
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HealthPage(),
+                      ),
+                    ),
+                  ),
+                  _buildCategoryButton(
+                    context,
                     "SORULAR",
+                    // help_center ikonu soru/yardım içeriğini daha net çağrıştırdığı için seçildi.
                     Icons.help_center,
                     const Color(0xFF43A047),
                     () => Navigator.push(
@@ -122,6 +157,7 @@ class PatientHomePage extends StatelessWidget {
     VoidCallback onTap,
   ) {
     return InkWell(
+      // Tek bir yardımcı metot kullanmak, kart tasarımını merkezi ve sürdürülebilir tutar.
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
@@ -155,6 +191,7 @@ class PatientHomePage extends StatelessWidget {
   }
 
   void _showLogoutConfirmation(BuildContext context) {
+    // Yanlışlıkla dokunma ile çıkışı engellemek için kullanıcıdan açık onay alınır.
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -189,6 +226,7 @@ class PatientHomePage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     GestureDetector(
+                      // Kırmızı seçenek sadece diyaloğu kapatır, oturum bilgisine dokunmaz.
                       onTap: () => Navigator.pop(context),
                       child: Container(
                         width: 100,
@@ -213,9 +251,11 @@ class PatientHomePage extends StatelessWidget {
                     ),
                     GestureDetector(
                       onTap: () async {
+                        // Firebase oturumu kapatılarak kullanıcının hesabı güvenli şekilde sonlandırılır.
                         await FirebaseAuth.instance.signOut();
 
                         if (context.mounted) {
+                          // mounted kontrolü, async sonrası geçersiz context kullanım hatasını önler.
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(
                               builder: (context) => const LoginPage(),
